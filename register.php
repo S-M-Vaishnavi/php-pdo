@@ -7,12 +7,13 @@
     <link rel="stylesheet" href="index.css"/>
 </head>
 <body>
-    
 <div class="container">
 <?php
     $passwordError = '';
     $emailError = '';
     $successMessage = '';
+    $errorMessage = '';
+    require_once("dbConnection.php");
 
     if(isset($_POST['submit'])){
         $name = $_POST['name'];
@@ -28,13 +29,21 @@
         if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
             $emailError = "<p class='error animation a5'>Invalid email address</p>";
         }
+        try {
+        // Check if the email is already registered
+        $stmt = $pdo->prepare("SELECT email FROM registration WHERE email = :email");
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
 
-        if(empty($passwordError) && empty($emailError)){
-            try{
-                require_once("dbConnection.php");
-                $insertQuery = "INSERT INTO registeration (name, email, password) VALUES (:name, :email, :password)";
+        if($stmt->rowCount() > 0){
+            $errorMessage = "<div class='alert-error'>
+                                <span class='closebtn' onclick=\"this.parentElement.style.display='none';\">&times;</span>
+                                User Already Registered
+                             </div>";
+        } elseif(empty($passwordError) && empty($emailError)){
+            
+                $insertQuery = "INSERT INTO registration (name, email, password) VALUES (:name, :email, :password)";
                 $stmt = $pdo->prepare($insertQuery);
-
                 $stmt->bindParam(':name', $name);
                 $stmt->bindParam(':email', $email);
                 $stmt->bindParam(':password', $password);
@@ -45,22 +54,24 @@
                                         Registration successful!
                                        </div>";
                 } else {
-                    $successMessage = "<div class='alert'>
+                    $errorMessage = "<div class='alert-error'>
                                         <span class='closebtn' onclick=\"this.parentElement.style.display='none';\">&times;</span>
                                         Error in executing statement.
                                        </div>";
                 }
-            } catch (Exception $e){
-                $successMessage = "<div class='alert'>
-                                    <span class='closebtn' onclick=\"this.parentElement.style.display='none';\">&times;</span>
-                                    Error: " . $e->getMessage() . "
-                                   </div>";
-            }
+             
         }
+    }catch (Exception $e){
+        $errorMessage = "<div class='alert-error'>
+                            <span class='closebtn' onclick=\"this.parentElement.style.display='none';\">&times;</span>
+                            Error: " . $e->getMessage() . "
+                           </div>";
+    }
     }
 ?>
   <div class="left">
   <?php echo $successMessage; ?>
+  <?php echo $errorMessage; ?>
     <div class="header">
       <h2 class="animation a1">Register Here</h2>
     </div>

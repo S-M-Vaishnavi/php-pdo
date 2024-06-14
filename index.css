@@ -95,6 +95,13 @@
     color: white;
     margin-bottom: 15px;
   }
+
+  .alert-error {
+    padding: 20px;
+    background-color:red; 
+    color: white;
+    margin-bottom: 15px;
+  }
   
   .closebtn {
     margin-left: 15px;
